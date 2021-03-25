@@ -2,7 +2,7 @@
 
 
 ## setup
-- Environment variable
+- environment variable
 	- BINANCE_API_KEY
 	- BINANCE_SECRET_KEY
 	- LINE_NOTIFY_API_KEY
@@ -14,5 +14,9 @@
 	- Excecuted Function `cloud_function`
 	- trigger `http` method
 	- Allow unauthenticated
+
+## Cronjob
+- [https://cron-job.org/](https://cron-job.org/) 
+- using POST method
 
 ![screenshot](https://raw.githubusercontent.com/cjtim/line-notify-binance-asset/master/img/screenshot.jpg)

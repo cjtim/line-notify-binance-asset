@@ -33,12 +33,8 @@ def get_json(path: str, query: dict = {}, timestamp=True, signature=True):
             msg=bytes(params, 'UTF-8'),
             digestmod=hashlib.sha256).hexdigest()
         params += '&signature=' + signature
-
-    print(params)
     resp = requests.get(
         f'https://api.binance.com{path}?{params}', headers=headers)
-    [print(f'{i}: {resp.headers[i]}')
-     for i in resp.headers if i.startswith('x')]
     dict_data = json.loads(resp.content)
     return dict_data
 
