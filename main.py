@@ -26,6 +26,7 @@ def cloud_function(request: Request):
             line_notify('Net Worth: ' + str(df.worth_usdt.sum()),
                         files=buf)
             buf.close()
+            del buf
             return {'status': 'success'}, 200
     return abort(403)
 
