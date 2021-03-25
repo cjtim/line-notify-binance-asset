@@ -1,0 +1,6 @@
+python-dotenv
+flask_cors
+flask
+seaborn
+pandas
+plotly
