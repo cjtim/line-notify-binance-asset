@@ -7,7 +7,7 @@ from os import getenv
 from flask_cors import CORS, cross_origin
 from flask import Request, Flask, Response, abort, request
 from binance import Binance
-import io
+import io, gc
 
 REQ_AUTH_KEY = getenv('REQ_AUTH_KEY')
 app = Flask(__name__)
@@ -37,6 +37,7 @@ def cloud_function():
                             files=buf)
                 buf.close()
             del buf
+            gc.collect()
             return {'status': 'success'}, 200
     return abort(403)
 
