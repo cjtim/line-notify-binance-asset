@@ -1,13 +1,15 @@
 # coding: utf8
 
-from dotenv import load_dotenv
-load_dotenv()
-import io
-from binance import *
-from flask import escape, Request, jsonify, Flask, Response, request, abort
-from flask_cors import CORS, cross_origin
+from line_notify import line_notify
+from get_image import render_mpl_table
+import pandas as pd
 from os import getenv
+from flask_cors import CORS, cross_origin
+from flask import Request, Flask, Response, abort
+from binance import Binance
+import io
 
+REQ_AUTH_KEY = getenv('REQ_AUTH_KEY')
 app = Flask(__name__)
 CORS(app)
 
@@ -15,17 +17,25 @@ CORS(app)
 @app.route("/", methods=["POST", "OPTIONS"])
 @cross_origin()
 def cloud_function(request: Request):
+    request_json = request.get_json()
     if "Authorization" in request.headers:
-        if request.headers['Authorization'] == getenv('REQ_AUTH_KEY'):
-            report = asset_report()
+        if request.headers['Authorization'] == REQ_AUTH_KEY:
+            binance = Binance(
+                request_json['binanceApiKey'],
+                request_json['binanceSecretKey']
+            )
+            report = binance.asset_report(request_json['prices'])
             df = pd.DataFrame(report)
-            fig, ax = render_mpl_table(df, header_columns=0, col_width=3.5)
-            buf = io.BytesIO()
-            fig.savefig(buf, bbox_inches='tight', pad_inches=0, format='png')
-            buf.seek(0)
-            line_notify('Net Worth: ' + str(df.worth_usdt.sum()),
-                        files=buf)
-            buf.close()
+            fig, ax = render_mpl_table(df, header_columns=0, col_width=2)
+            with io.BytesIO() as buf:
+                fig.savefig(buf, bbox_inches='tight',
+                            pad_inches=0, format='png')
+                buf.seek(0)
+                line_notify(request_json['lineNotifyToken'],
+                            '\nNet Worth: ' + str(round(df.worth_usdt.sum(), 3)) +
+                            '\nProfit: ' + str(round(df.profit.sum(), 3)),
+                            files=buf)
+                buf.close()
             del buf
             return {'status': 'success'}, 200
     return abort(403)
@@ -33,8 +43,3 @@ def cloud_function(request: Request):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=getenv('PORT'))
-
-
-@app.errorhandler(403)
-def resource_not_found(e):
-    return jsonify({'status': 'Access denied'}), 403

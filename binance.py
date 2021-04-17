@@ -1,111 +1,79 @@
-from os import getenv
 import requests
 import urllib
 import hmac
 import hashlib
 import json
 from datetime import datetime
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import numpy as np
-import plotly.figure_factory as ff
-
-BINANCE_API_KEY = getenv('BINANCE_API_KEY')
-BINANCE_SECRET_KEY = getenv('BINANCE_SECRET_KEY')
-LINE_NOTIFY_API_KEY = getenv("LINE_NOTIFY_API_KEY")
 
 
-def get_json(path: str, query: dict = {}, timestamp=True, signature=True):
-    headers = {
-        'X-MBX-APIKEY': BINANCE_API_KEY
-    }
-    body = {}
-    if timestamp:
-        body.update({'timestamp': int(datetime.now().timestamp() * 1000)})
-    params = urllib.parse.urlencode({
-        **query,
-        **body
-    })
-    if signature:
-        signature = hmac.new(
-            key=bytes(BINANCE_SECRET_KEY, 'UTF-8'),
-            msg=bytes(params, 'UTF-8'),
-            digestmod=hashlib.sha256).hexdigest()
-        params += '&signature=' + signature
-    resp = requests.get(
-        f'https://api.binance.com{path}?{params}', headers=headers)
-    dict_data = json.loads(resp.content)
-    return dict_data
+class Binance:
+    def __init__(self, BINANCE_API_KEY: str = "",  BINANCE_SECRET_KEY: str = ""):
+        self.BINANCE_API_KEY = BINANCE_API_KEY
+        self.BINANCE_SECRET_KEY = BINANCE_SECRET_KEY
 
+    def __get_json(self, path: str, query: dict = {}, timestamp=True, signature=True):
+        headers = {
+            'X-MBX-APIKEY': self.BINANCE_API_KEY
+        }
+        body = {}
+        if timestamp:
+            body.update({'timestamp': int(datetime.now().timestamp() * 1000)})
+        params = urllib.parse.urlencode({
+            **query,
+            **body
+        })
+        if signature:
+            signature = hmac.new(
+                key=bytes(self.BINANCE_SECRET_KEY, 'UTF-8'),
+                msg=bytes(params, 'UTF-8'),
+                digestmod=hashlib.sha256).hexdigest()
+            params += '&signature=' + signature
+        resp = requests.get(
+            f'https://api.binance.com{path}?{params}', headers=headers)
+        dict_data = json.loads(resp.content)
+        return dict_data
 
-def get_price_usdt(symbols: list):
-    result = {}
-    all_symbols = get_json('/api/v3/ticker/price', {}, False, False)
-    for i in all_symbols:
-        if (i['symbol'].endswith('USDT') and
-                i['symbol'][:-4] in symbols):
+    def get_price_usdt(self, symbols: list):
+        result = {}
+        all_symbols = self.__get_json('/api/v3/ticker/price', {}, False, False)
+        for i in all_symbols:
             result.update({
                 i['symbol']: i['price']
             })
-    return result
+        return result
 
+    def get_asset(self):
+        account = self.__get_json('/api/v3/account', {}, True, True)
+        arr = [i for i in account['balances'] if float(
+            i['free']) != 0 or float(i['locked']) != 0]
+        return arr
 
-def get_asset():
-    account = get_json('/api/v3/account', {}, True, True)
-    arr = [i for i in account['balances'] if float(
-        i['free']) != 0 or float(i['locked']) != 0]
-    return arr
-
-
-def asset_report():
-    asset = get_asset()
-    price = get_price_usdt([i['asset'] for i in asset])
-    result = []
-    for i in asset:
-        vol = float(i['free']) + float(i['locked'])
-        if i['asset'].endswith('USDT'):
+    def asset_report(self, buy_price):
+        asset = self.get_asset()
+        price = self.get_price_usdt([i['asset'] for i in asset])
+        result = []
+        for i in asset:
+            isCoin = not i['asset'].endswith(
+                'USDT') and not i['asset'].startswith('LD')
+            isLockedAsset = i['asset'].startswith('LD')
+            vol = float(i['free']) + float(i['locked'])
+            worth_usdt = vol
+            profit = 0.00
+            if isLockedAsset:
+                price_per_vol = float(price[i['asset'][2:] + 'USDT'])
+                worth_usdt = vol * price_per_vol
+                if i['asset'][2:] in buy_price:
+                    profit = worth_usdt - (vol * buy_price[i['asset']])
+            elif isCoin:
+                price_per_vol = float(price[i['asset'] + 'USDT'])
+                worth_usdt = vol * price_per_vol
+                if i['asset'] in buy_price:
+                    profit = worth_usdt - (vol * buy_price[i['asset']])
             result.append({
-                **i,
-                'vol': vol,
-                'worth_usdt': vol,
+                'asset': i['asset'],
+                'current_price': round(price_per_vol if isCoin else vol, 4),
+                'vol': round(vol, 3),
+                'worth_usdt': round(worth_usdt, 3),
+                'profit': round(profit, 3)
             })
-        else:
-            result.append({
-                **i,
-                'vol': vol,
-                'worth_usdt': vol * float(price[i['asset'] + 'USDT']),
-            })
-    return result
-
-
-def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
-                     header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
-                     bbox=[0, 0, 1, 1], header_columns=0,
-                     ax=None, **kwargs):
-    if ax is None:
-        size = (np.array(data.shape[::-1]) + np.array([0, 1])
-                ) * np.array([col_width, row_height])
-        fig, ax = plt.subplots(figsize=size)
-        ax.axis('off')
-    mpl_table = ax.table(cellText=data.values, bbox=bbox,
-                         colLabels=data.columns, **kwargs)
-    mpl_table.auto_set_font_size(False)
-    mpl_table.set_fontsize(font_size)
-
-    for k, cell in mpl_table._cells.items():
-        cell.set_edgecolor(edge_color)
-        if k[0] == 0 or k[1] < header_columns:
-            cell.set_text_props(weight='bold', color='w')
-            cell.set_facecolor(header_color)
-        else:
-            cell.set_facecolor(row_colors[k[0] % len(row_colors)])
-    return ax.get_figure(), ax
-
-
-def line_notify(message: str, files: bytes):
-    return requests.Session().post('https://notify-api.line.me/api/notify', data={
-        'message': message
-    }, files={'imageFile': files}, headers={
-        'Authorization': 'Bearer ' + LINE_NOTIFY_API_KEY
-    })
+        return result
