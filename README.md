@@ -36,6 +36,8 @@
 	"lineNotifyToken": "XXXXX",
 
 	"prices": {
+		// this is the price you buy the coin
+		// so program can calulate your profit
 
 		"FTT": 53.3,
 
