@@ -66,4 +66,4 @@
 
   
 
-![screenshot](https://raw.githubusercontent.com/cjtim/microservice-binance-cronjob/master/img/screenshot.jpg)
+![screenshot](https://raw.githubusercontent.com/cjtim/line-notify-binance-asset/master/img/screenshot.jpg)
