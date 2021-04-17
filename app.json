@@ -1,0 +1,17 @@
+{
+  "name": "Line Notify Binance Asset",
+  "description": "A Report generator binance asset, can be use as microservice cronjob",
+  "repository": "https://github.com/cjtim/line-notify-binance-asset",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "REQ_AUTH_KEY": {
+      "description": "Only allow this Authorization header for request",
+      "generator": "secret"
+    }
+  }
+}
