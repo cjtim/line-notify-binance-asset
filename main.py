@@ -5,7 +5,7 @@ from get_image import render_mpl_table
 import pandas as pd
 from os import getenv
 from flask_cors import CORS, cross_origin
-from flask import Request, Flask, Response, abort
+from flask import Request, Flask, Response, abort, request
 from binance import Binance
 import io
 
@@ -16,7 +16,7 @@ CORS(app)
 
 @app.route("/", methods=["POST", "OPTIONS"])
 @cross_origin()
-def cloud_function(request: Request):
+def cloud_function():
     request_json = request.get_json()
     if "Authorization" in request.headers:
         if request.headers['Authorization'] == REQ_AUTH_KEY:
