@@ -5,11 +5,12 @@ from get_image import render_mpl_table
 import pandas as pd
 from os import getenv
 from flask_cors import CORS, cross_origin
-from flask import Request, Flask, Response, abort, request
+from flask import Flask, abort, request
 from binance import Binance
-import io, gc
+import io
+import gc
 
-REQ_AUTH_KEY = getenv('REQ_AUTH_KEY')
+REQ_AUTH_KEY = getenv('REQ_AUTH_KEY') or ''
 app = Flask(__name__)
 CORS(app)
 
@@ -43,4 +44,4 @@ def cloud_function():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=getenv('PORT'))
+    app.run(host="0.0.0.0", port=getenv('PORT') or 8080)

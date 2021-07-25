@@ -33,7 +33,7 @@ class Binance:
         dict_data = json.loads(resp.content)
         return dict_data
 
-    def get_price_usdt(self, symbols: list):
+    def __get_price_usdt(self):
         result = {}
         all_symbols = self.__get_json('/api/v3/ticker/price', {}, False, False)
         for i in all_symbols:
@@ -42,15 +42,15 @@ class Binance:
             })
         return result
 
-    def get_asset(self):
+    def __get_asset(self):
         account = self.__get_json('/api/v3/account', {}, True, True)
         arr = [i for i in account['balances'] if float(
             i['free']) != 0 or float(i['locked']) != 0]
         return arr
 
     def asset_report(self, buy_price):
-        asset = self.get_asset()
-        price = self.get_price_usdt([i['asset'] for i in asset])
+        asset = self.__get_asset()
+        price = self.__get_price_usdt([i['asset'] for i in asset])
         result = []
         for i in asset:
             isCoin = not i['asset'].endswith(
