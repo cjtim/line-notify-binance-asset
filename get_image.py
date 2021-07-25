@@ -1,7 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 import matplotlib
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+import plotly.figure_factory as ff
 
 
 def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
