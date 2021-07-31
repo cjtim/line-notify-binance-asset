@@ -1,7 +1,6 @@
-flask_cors
 flask
-seaborn
+flask_cors
 pandas
-plotly
+matplotlib
 requests
 kucoin-python

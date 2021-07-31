@@ -6,11 +6,10 @@ name = "pypi"
 [packages]
 flask-cors = "*"
 flask = "*"
-seaborn = "*"
 pandas = "*"
-plotly = "*"
 requests = "*"
 kucoin-python = "*"
+matplotlib = "*"
 
 [dev-packages]
 functions-framework = "*"
