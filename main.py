@@ -7,7 +7,7 @@ from os import getenv
 from flask_cors import CORS, cross_origin
 from flask import Flask, abort, request
 from binance.binance import Binance
-from kucoin.kucoin import Kucoin
+from kucoin_lib.kucoin import Kucoin
 import io, gc
 
 REQ_AUTH_KEY = getenv('REQ_AUTH_KEY', '')
@@ -33,6 +33,7 @@ def binance():
                             pad_inches=0, format='png')
                 buf.seek(0)
                 line_notify(request_json['lineNotifyToken'],
+                            '\nBinance' +
                             '\nNet Worth: ' + str(round(df.worth_usdt.sum(), 3)) +
                             '\nProfit: ' + str(round(df.profit.sum(), 3)),
                             files=buf)
@@ -61,6 +62,7 @@ def kucoin():
                             pad_inches=0, format='png')
                 buf.seek(0)
                 line_notify(request_json['lineNotifyToken'],
+                            '\nKucoin' +
                             '\nNet Worth: ' + str(round(df.worth_usdt.sum(), 3)) +
                             '\nProfit: ' + str(round(df.profit.sum(), 3)),
                             files=buf)
