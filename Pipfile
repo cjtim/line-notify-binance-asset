@@ -10,6 +10,7 @@ seaborn = "*"
 pandas = "*"
 plotly = "*"
 requests = "*"
+kucoin-python = "*"
 
 [dev-packages]
 functions-framework = "*"

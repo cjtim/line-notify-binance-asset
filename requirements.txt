@@ -4,3 +4,4 @@ seaborn
 pandas
 plotly
 requests
+kucoin-python
