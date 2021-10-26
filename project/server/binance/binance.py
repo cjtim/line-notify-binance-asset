@@ -5,7 +5,7 @@ import hmac
 import hashlib
 import json
 from datetime import datetime
-
+from logging import error
 
 class Binance:
     def __init__(self, BINANCE_API_KEY: str = "",  BINANCE_SECRET_KEY: str = ""):
@@ -49,32 +49,28 @@ class Binance:
             i['free']) != 0 or float(i['locked']) != 0]
         return arr
 
-    def asset_report(self, buy_price) -> List[Dict[str, any]]:
+    def asset_report(self, buy_price: Dict[str, float]) -> List[Dict[str, any]]:
         asset = self.__get_asset()
         price = self.__get_price_usdt()
+        COMPARE_UNIT: str = 'USDT'
         result = []
         for i in asset:
-            isCoin = not i['asset'].endswith(
-                'USDT') and not i['asset'].startswith('LD')
-            isLockedAsset = i['asset'].startswith('LD')
-            vol = float(i['free']) + float(i['locked'])
-            worth_usdt = vol
-            profit = 0.00
-            if isLockedAsset:
-                price_per_vol = float(price[i['asset'][2:] + 'USDT'])
-                worth_usdt = vol * price_per_vol
-                if i['asset'][2:] in buy_price:
-                    profit = worth_usdt - (vol * buy_price[i['asset']])
-            elif isCoin:
-                price_per_vol = float(price[i['asset'] + 'USDT'])
+            try:
+                if i['asset'] == COMPARE_UNIT:
+                    continue
+                vol = float(i['free']) + float(i['locked'])
+                profit = 0.00
+                price_per_vol = float(price[i['asset'] + COMPARE_UNIT])
                 worth_usdt = vol * price_per_vol
                 if i['asset'] in buy_price:
                     profit = worth_usdt - (vol * buy_price[i['asset']])
-            result.append({
-                'asset': i['asset'],
-                'current_price': round(price_per_vol if isCoin else vol, 4),
-                'vol': round(vol, 3),
-                'worth_usdt': round(worth_usdt, 3),
-                'profit': round(profit, 3)
-            })
+                result.append({
+                    'asset': i['asset'],
+                    'current_price': round(price_per_vol , 4),
+                    'vol': round(vol, 3),
+                    'worth_usdt': round(worth_usdt, 3),
+                    'profit': round(profit, 3)
+                })
+            except Exception as e:
+                error(e)
         return result
